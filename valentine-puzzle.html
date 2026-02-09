@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>For Gustė</title>
+  <style>
+    :root{
+      --bg:#fff6f8;
+      --panel:#fff1f4;
+      --text:#1a1a1a;
+      --muted:#6b5560;
+      --border:#e9c5cf;
+      --border-strong:#d89aa9;
+      --accent:#e11d48;
+      --accent2:#fb7185;
+      --tile-gap:10px;
+      --radius:14px;
+      --tile-radius:12px;
+      --max:520px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    .wrap{
+      width:min(var(--max), 100%);
+      border:1px solid var(--border-strong);
+      border-radius:var(--radius);
+      background:#fff;
+      padding:18px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    /* subtle heart pattern */
+    .pattern{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      opacity:.14;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(225,29,72,.20) 0 2px, transparent 3px),
+        radial-gradient(circle at 22% 72%, rgba(225,29,72,.15) 0 2px, transparent 3px),
+        radial-gradient(circle at 84% 28%, rgba(225,29,72,.18) 0 2px, transparent 3px),
+        radial-gradient(circle at 76% 82%, rgba(225,29,72,.14) 0 2px, transparent 3px),
+        radial-gradient(circle at 55% 10%, rgba(225,29,72,.12) 0 2px, transparent 3px);
+    }
+
+    .topline{
+      position:relative;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      border-bottom:1px solid var(--border);
+      padding-bottom:12px;
+      margin-bottom:14px;
+    }
+    .tag{
+      font-size:12px;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+    h1{
+      font-size:22px;
+      margin:6px 0 0;
+      letter-spacing:-0.01em;
+    }
+    p{
+      margin:10px 0 0;
+      color:var(--muted);
+      line-height:1.4;
+      font-size:14px;
+    }
+
+    /* Screen transitions */
+    .screen{
+      display:none;
+      opacity:0;
+      transform: translateY(6px);
+      transition: opacity 240ms ease, transform 240ms ease;
+    }
+    .screen.active{
+      display:block;
+    }
+    .screen.show{
+      opacity:1;
+      transform: translateY(0);
+    }
+
+    .btnrow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+    button{
+      border:1px solid var(--border-strong);
+      background:var(--panel);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      font-weight:800;
+      cursor:pointer;
+      transition: transform 120ms ease, background 160ms ease, border-color 160ms ease;
+    }
+    button:hover{
+      border-color: var(--accent2);
+    }
+    button:active{
+      transform:translateY(1px) scale(0.99);
+    }
+    .primary{
+      background:var(--accent);
+      color:#fff;
+      border-color: var(--accent);
+    }
+    .primary:hover{
+      background:#d31640;
+      border-color:#d31640;
+    }
+
+    /* Puzzle */
+    .puzzleHeader{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
+      margin:10px 0 10px;
+    }
+    .hint{
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    #grid{
+      width:100%;
+      aspect-ratio:1/1;
+      display:grid;
+      grid-template-columns:repeat(3, 1fr);
+      grid-template-rows:repeat(3, 1fr);
+      gap:var(--tile-gap);
+      padding:var(--tile-gap);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background: #fff7fa;
+      user-select:none;
+      touch-action:none;
+    }
+
+    .tile{
+      border:1px solid var(--border);
+      border-radius:var(--tile-radius);
+      background-image:url("puzzle.jpg"); /* CHANGE IF NEEDED */
+      background-size:300% 300%;
+      background-repeat:no-repeat;
+      background-color:#fff;
+      cursor:grab;
+      transition: transform 120ms ease, outline 120ms ease, opacity 120ms ease;
+    }
+    .tile:active{cursor:grabbing}
+    .tile.dragging{
+      outline:2px solid var(--accent);
+      outline-offset:2px;
+      opacity:.75;
+      transform: scale(0.98);
+    }
+    .tile.dropTarget{
+      outline:2px dashed var(--accent2);
+      outline-offset:2px;
+    }
+
+    .smallmuted{
+      margin-top:10px;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    /* Modal */
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(30, 0, 10, .35);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+    .overlay.show{display:flex}
+    .modal{
+      width:min(520px, 100%);
+      background:#fff;
+      border:1px solid var(--border-strong);
+      border-radius:16px;
+      padding:18px;
+      position:relative;
+      overflow:hidden;
+    }
+    .modal h2{
+      margin:0 0 6px;
+      font-size:20px;
+    }
+    .modal p{
+      margin:0 0 14px;
+      color:var(--text);
+    }
+
+    /* Floating hearts burst */
+    .heartsLayer{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      overflow:hidden;
+      display:none;
+    }
+    .heartsLayer.show{display:block}
+    .heart{
+      position:absolute;
+      font-size:18px;
+      opacity:0;
+      transform: translateY(0) scale(1);
+      animation: floatUp 1100ms ease-out forwards;
+      filter: saturate(1.2);
+    }
+    @keyframes floatUp{
+      0%{ opacity:0; transform: translateY(10px) scale(.9); }
+      15%{ opacity:1; }
+      100%{ opacity:0; transform: translateY(-140px) scale(1.2); }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap" id="wrap">
+    <div class="pattern"></div>
+
+    <div class="topline">
+      <div>
+        <div class="tag">Valentine’s mini quest</div>
+        <h1 id="title">Gustė, will you be my Valentine?</h1>
+        <p id="subtitle">Choose wisely.</p>
+      </div>
+      <div class="tag" id="stepTag">Step 0/1</div>
+    </div>
+
+    <!-- Screen: question -->
+    <section id="screenQuestion" class="screen active">
+      <div class="btnrow">
+        <button class="primary" id="btnYes">Yes</button>
+        <button id="btnNo">No</button>
+      </div>
+      <p class="smallmuted">Tip: “No” is not an option.</p>
+    </section>
+
+    <!-- Screen: puzzle -->
+    <section id="screenPuzzle" class="screen">
+      <div class="puzzleHeader">
+        <div class="tag">Drag and drop tiles to swap</div>
+        <div class="hint" id="status">Not solved</div>
+      </div>
+
+      <div id="grid" aria-label="3x3 swap puzzle"></div>
+
+      <div class="btnrow">
+        <button id="btnShuffle">Shuffle (easy)</button>
+        <button id="btnShuffleHard">Shuffle (hard)</button>
+        <button id="btnShowPreview">Preview</button>
+      </div>
+
+      <p class="smallmuted">Desktop: drag tiles. Mobile: tap one tile, then tap another to swap.</p>
+    </section>
+  </div>
+
+  <!-- Win Modal -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <div class="tag" style="margin-bottom:8px;">Unlocked</div>
+      <h2>Congrats.</h2>
+      <p><strong>I love you, Gustė.</strong></p>
+      <div class="btnrow">
+        <button class="primary" id="btnClose">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview Modal -->
+  <div class="overlay" id="previewOverlay">
+    <div class="modal">
+      <div class="tag" style="margin-bottom:8px;">Preview</div>
+      <h2>Full image</h2>
+      <div style="width:100%; aspect-ratio:1/1; border:1px solid var(--border); border-radius:16px; overflow:hidden; background:#fff7fa;">
+        <img src="puzzle.jpg" alt="preview" style="width:100%; height:100%; object-fit:cover;">
+      </div>
+      <div class="btnrow" style="margin-top:12px;">
+        <button class="primary" id="btnClosePreview">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hearts animation layer -->
+  <div class="heartsLayer" id="heartsLayer"></div>
+
+<script>
+  // ---------- Helpers ----------
+  function nextFrame(fn){ requestAnimationFrame(() => requestAnimationFrame(fn)); }
+
+  // ---------- Screen flow with smooth transitions ----------
+  const screenQuestion = document.getElementById("screenQuestion");
+  const screenPuzzle = document.getElementById("screenPuzzle");
+  const btnYes = document.getElementById("btnYes");
+  const btnNo = document.getElementById("btnNo");
+  const stepTag = document.getElementById("stepTag");
+  const title = document.getElementById("title");
+  const subtitle = document.getElementById("subtitle");
+  const wrap = document.getElementById("wrap");
+
+  function showScreen(el){
+    el.classList.add("active");
+    nextFrame(() => el.classList.add("show"));
+  }
+  function hideScreen(el){
+    el.classList.remove("show");
+    // allow transition to finish before display none
+    setTimeout(() => el.classList.remove("active"), 240);
+  }
+
+  // initial show
+  showScreen(screenQuestion);
+
+  function showPuzzle(){
+    hideScreen(screenQuestion);
+    showScreen(screenPuzzle);
+    stepTag.textContent = "Step 1/1";
+    title.textContent = "Fix the puzzle";
+    subtitle.textContent = "Then you unlock the message.";
+  }
+  btnYes.addEventListener("click", showPuzzle);
+
+  // "No" button dodges
+  let dodgeCount = 0;
+  function dodge(){
+    dodgeCount++;
+    const r = wrap.getBoundingClientRect();
+
+    btnNo.style.position = "absolute";
+    btnNo.style.left = Math.max(18, Math.min(r.width - 92, Math.random() * (r.width - 92))) + "px";
+    btnNo.style.top  = Math.max(70, Math.min(r.height - 48, Math.random() * (r.height - 48))) + "px";
+
+    if(dodgeCount >= 6) btnNo.textContent = "Nope";
+    if(dodgeCount >= 10) btnNo.textContent = "Press Yes";
+  }
+  btnNo.addEventListener("mouseenter", dodge);
+  btnNo.addEventListener("touchstart", (e) => { e.preventDefault(); dodge(); }, {passive:false});
+  btnNo.addEventListener("click", (e) => { e.preventDefault(); dodge(); });
+
+  // ---------- Swap puzzle ----------
+  const grid = document.getElementById("grid");
+  const status = document.getElementById("status");
+  const btnShuffle = document.getElementById("btnShuffle");
+  const btnShuffleHard = document.getElementById("btnShuffleHard");
+
+  let state = [...Array(9).keys()];
+
+  function setTileBackground(el, piece){
+    const col = piece % 3;
+    const row = Math.floor(piece / 3);
+    el.style.backgroundPosition = `${col * 50}% ${row * 50}%`;
+  }
+
+  function render(){
+    grid.innerHTML = "";
+    state.forEach((piece, pos) => {
+      const el = document.createElement("div");
+      el.className = "tile";
+      el.draggable = true;
+      el.dataset.pos = String(pos);
+
+      setTileBackground(el, piece);
+
+      el.addEventListener("dragstart", onDragStart);
+      el.addEventListener("dragend", onDragEnd);
+      el.addEventListener("dragover", onDragOver);
+      el.addEventListener("dragleave", onDragLeave);
+      el.addEventListener("drop", onDrop);
+
+      // Mobile fallback: tap-to-swap
+      el.addEventListener("click", onTapSwap);
+
+      grid.appendChild(el);
+    });
+
+    updateSolved();
+  }
+
+  function shuffle(nSwaps){
+    state = [...Array(9).keys()];
+    for(let i=0;i<nSwaps;i++){
+      const a = Math.floor(Math.random()*9);
+      let b = Math.floor(Math.random()*9);
+      while(b === a) b = Math.floor(Math.random()*9);
+      [state[a], state[b]] = [state[b], state[a]];
+    }
+    winShown = false; // allow win again after reshuffle
+    render();
+  }
+
+  function updateSolved(){
+    const solved = state.every((piece, pos) => piece === pos);
+    status.textContent = solved ? "Solved" : "Not solved";
+    if(solved) showWin();
+  }
+
+  // Drag & Drop
+  let dragFromPos = null;
+
+  function onDragStart(e){
+    dragFromPos = Number(e.currentTarget.dataset.pos);
+    e.dataTransfer.setData("text/plain", String(dragFromPos));
+    e.currentTarget.classList.add("dragging");
+  }
+  function onDragEnd(e){
+    e.currentTarget.classList.remove("dragging");
+    dragFromPos = null;
+    [...grid.children].forEach(ch => ch.classList.remove("dropTarget"));
+  }
+  function onDragOver(e){
+    e.preventDefault();
+    e.currentTarget.classList.add("dropTarget");
+  }
+  function onDragLeave(e){
+    e.currentTarget.classList.remove("dropTarget");
+  }
+  function onDrop(e){
+    e.preventDefault();
+    const toPos = Number(e.currentTarget.dataset.pos);
+    const fromPos = Number(e.dataTransfer.getData("text/plain"));
+    if(Number.isNaN(fromPos) || fromPos === toPos) return;
+    [state[fromPos], state[toPos]] = [state[toPos], state[fromPos]];
+    render();
+  }
+
+  // Mobile tap swap
+  let selectedPos = null;
+  function onTapSwap(e){
+    const pos = Number(e.currentTarget.dataset.pos);
+    if(selectedPos === null){
+      selectedPos = pos;
+      e.currentTarget.classList.add("dropTarget");
+      return;
+    }
+    const prev = selectedPos;
+    selectedPos = null;
+    [...grid.children].forEach(ch => ch.classList.remove("dropTarget"));
+    if(prev === pos) return;
+    [state[prev], state[pos]] = [state[pos], state[prev]];
+    render();
+  }
+
+  btnShuffle.addEventListener("click", () => shuffle(8));
+  btnShuffleHard.addEventListener("click", () => shuffle(24));
+
+  // ---------- Hearts animation on win ----------
+  const heartsLayer = document.getElementById("heartsLayer");
+
+  function heartsBurst(){
+    heartsLayer.innerHTML = "";
+    heartsLayer.classList.add("show");
+
+    const count = 24;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+
+    for(let i=0;i<count;i++){
+      const d = document.createElement("div");
+      d.className = "heart";
+      d.textContent = Math.random() < 0.5 ? "❤️" : "💗";
+
+      const x = Math.random() * w;
+      const y = h - 60 - Math.random()*40;
+
+      d.style.left = x + "px";
+      d.style.top = y + "px";
+      d.style.fontSize = (14 + Math.random()*18) + "px";
+      d.style.animationDuration = (900 + Math.random()*500) + "ms";
+      d.style.animationDelay = (Math.random()*120) + "ms";
+
+      heartsLayer.appendChild(d);
+    }
+
+    setTimeout(() => heartsLayer.classList.remove("show"), 1400);
+  }
+
+  // ---------- Win modal ----------
+  const overlay = document.getElementById("overlay");
+  const btnClose = document.getElementById("btnClose");
+  let winShown = false;
+
+  function showWin(){
+    if(winShown) return;
+    winShown = true;
+    heartsBurst();
+    overlay.classList.add("show");
+  }
+  btnClose.addEventListener("click", () => overlay.classList.remove("show"));
+  overlay.addEventListener("click", (e) => { if(e.target === overlay) overlay.classList.remove("show"); });
+
+  // ---------- Preview ----------
+  const previewOverlay = document.getElementById("previewOverlay");
+  const btnShowPreview = document.getElementById("btnShowPreview");
+  const btnClosePreview = document.getElementById("btnClosePreview");
+
+  btnShowPreview.addEventListener("click", () => previewOverlay.classList.add("show"));
+  btnClosePreview.addEventListener("click", () => previewOverlay.classList.remove("show"));
+  previewOverlay.addEventListener("click", (e) => { if(e.target === previewOverlay) previewOverlay.classList.remove("show"); });
+
+  // init
+  shuffle(8);
+</script>
+</body>
+</html>
